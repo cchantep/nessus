@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Git pre-push hook to check cargo fmt
+# This hook will prevent pushing code that is not properly formatted
+
+echo "Running cargo fmt check before push..."
+
+# Check if cargo fmt would make any changes
+if ! cargo fmt --check --quiet; then
+    echo "❌ Code formatting check failed!"
+    echo ""
+    echo "Please run 'cargo fmt' to format your code before pushing."
+    echo "You can also run 'cargo fmt --check' to see what needs formatting."
+    echo ""
+    echo "Push aborted."
+    exit 1
+fi
+
+echo "✅ Code formatting check passed!"
+exit 0

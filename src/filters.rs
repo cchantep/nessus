@@ -23,17 +23,19 @@ pub struct FilterBuilder<T> {
 impl<T> FilterBuilder<T> {
     /// Creates a new empty FilterBuilder instance.
     ///
+    /// Notes: Prefer using the `new` method directly instead of the `empty` function.
+    ///
     /// # Example
     ///
     /// ```rust
-    /// use nessus::filters::empty;
+    /// use nessus::filters::FilterBuilder;
     /// use nessus::FieldWitnesses;
     /// use serde::{Serialize, Deserialize};
     ///
     /// #[derive(Debug, Clone, Serialize, Deserialize, FieldWitnesses)]
     /// struct User { Name: String }
     ///
-    /// let builder = empty::<User>();
+    /// let builder = FilterBuilder::<User>::new();
     /// ```
     pub fn new() -> Self {
         Self {
@@ -43,6 +45,7 @@ impl<T> FilterBuilder<T> {
         }
     }
 
+    /// Returns a fully qualified field path for the given field name marker type.
     fn field_path<F: FieldName>(&self) -> String {
         if self.prefix.is_empty() {
             F::field_name().to_string()
@@ -51,10 +54,8 @@ impl<T> FilterBuilder<T> {
         }
     }
 
-    /// Type-safe equality filter that checks at compile time if the field exists
-    /// and has the correct type or a compatible type
-    ///
-    /// Creates a MongoDB filter for values equal to the provided value.
+    /// Creates a type-safe equality filter (`$eq`) that checks at compile time if the field exists
+    /// and has the correct type or a compatible type.
     ///
     /// # Type parameters:
     /// * `F` - The field name marker type (e.g., `user_fields::Name`)
@@ -71,9 +72,7 @@ impl<T> FilterBuilder<T> {
     /// struct User { Name: String, Age: i32 }
     ///
     /// // Using builder pattern with efficient chaining:
-    /// let mut builder = empty::<User>();
-    ///
-    /// builder.eq::<user_fields::Name, _>("John".to_string());
+    /// empty::<User>().eq::<user_fields::Name, _>("John".to_string());
     /// ```
     pub fn eq<F, V>(&mut self, value: V) -> &mut Self
     where
@@ -93,9 +92,7 @@ impl<T> FilterBuilder<T> {
         &self.clauses
     }
 
-    /// Type-safe version of greater than filter
-    ///
-    /// Creates a MongoDB filter for values greater than the provided value.
+    /// Creates a type-safe version of MongoDB's greater than (`$gt`) filter.
     ///
     /// # Type parameters:
     /// * `F` - The field name marker type (e.g., `product_fields::Price`)
@@ -112,9 +109,7 @@ impl<T> FilterBuilder<T> {
     /// struct Product { Price: f64 }
     ///
     /// // Filter for products with price > 500
-    /// let mut builder = empty::<Product>();
-    ///
-    /// builder.gt::<product_fields::Price, _>(500.0);
+    /// empty::<Product>().gt::<product_fields::Price, _>(500.0);
     /// // Resulting BSON: { "Price": { "$gt": 500.0 } }
     /// ```
     pub fn gt<F, V>(&mut self, value: V) -> &mut Self
@@ -131,9 +126,7 @@ impl<T> FilterBuilder<T> {
         self
     }
 
-    /// Type-safe version of less than filter
-    ///
-    /// Creates a MongoDB filter for values less than the provided value.
+    /// Creates a type-safe version of MongoDB's less (`$lt`) than filter.
     ///
     /// # Type parameters:
     /// * `F` - The field name marker type (e.g., `product_fields::Stock`)
@@ -150,9 +143,7 @@ impl<T> FilterBuilder<T> {
     /// struct Product { Stock: i32 }
     ///
     /// // Filter for products with stock < 10
-    /// let mut builder = empty::<Product>();
-    ///
-    /// builder.lt::<product_fields::Stock, _>(10);
+    /// empty::<Product>().lt::<product_fields::Stock, _>(10);
     /// // Resulting BSON: { "Stock": { "$lt": 10 } }
     /// ```
     pub fn lt<F, V>(&mut self, value: V) -> &mut Self
@@ -188,9 +179,7 @@ impl<T> FilterBuilder<T> {
     /// struct User { Age: i32 }
     ///
     /// // Filter for users with age in [20, 30, 40]
-    /// let mut builder = empty::<User>();
-    ///
-    /// builder.r#in::<user_fields::Age, _>(vec![20, 30, 40]);
+    /// empty::<User>().r#in::<user_fields::Age, _>(vec![20, 30, 40]);
     /// // Resulting BSON: { "Age": { "$in": [20, 30, 40] } }
     /// ```
     pub fn r#in<F, V>(&mut self, values: Vec<V>) -> &mut Self
@@ -208,9 +197,7 @@ impl<T> FilterBuilder<T> {
         self
     }
 
-    /// Type-safe version of "not equal" filter
-    ///
-    /// Creates a MongoDB filter for values not equal to the provided value.
+    /// Creates a type-safe version of MongoDB's "not equal" (`$ne`) filter.
     ///
     /// # Type parameters:
     /// * `F` - The field name marker type (e.g., `order_fields::Status`)
@@ -227,9 +214,7 @@ impl<T> FilterBuilder<T> {
     /// struct Order { Status: String }
     ///
     /// // Filter for orders with status not equal to "Delivered"
-    /// let mut builder = empty::<Order>();
-    ///
-    /// builder.ne::<order_fields::Status, _>("Delivered".to_string());
+    /// empty::<Order>().ne::<order_fields::Status, _>("Delivered".to_string());
     /// // Resulting BSON: { "Status": { "$ne": "Delivered" } }
     /// ```
     pub fn ne<F, V>(&mut self, value: V) -> &mut Self
@@ -246,9 +231,7 @@ impl<T> FilterBuilder<T> {
         self
     }
 
-    /// Type-safe version of "greater than or equal" filter
-    ///
-    /// Creates a MongoDB filter for values greater than or equal to the provided value.
+    /// Creates a type-safe version of MongoDB's "greater than or equal" (`$gte`) filter.
     ///
     /// # Type parameters:
     /// * `F` - The field name marker type (e.g., `product_fields::Rating`)
@@ -265,9 +248,7 @@ impl<T> FilterBuilder<T> {
     /// struct Product { Rating: f64 }
     ///
     /// // Filter for products with rating >= 4.5
-    /// let mut builder = empty::<Product>();
-    ///
-    /// builder.gte::<product_fields::Rating, _>(4.5);
+    /// empty::<Product>().gte::<product_fields::Rating, _>(4.5);
     /// // Resulting BSON: { "Rating": { "$gte": 4.5 } }
     /// ```
     pub fn gte<F, V>(&mut self, value: V) -> &mut Self
@@ -284,9 +265,7 @@ impl<T> FilterBuilder<T> {
         self
     }
 
-    /// Type-safe version of "less than or equal" filter
-    ///
-    /// Creates a MongoDB filter for values less than or equal to the provided value.
+    /// Creates a type-safe version of MongoDB's "less than or equal" (`$lte`) filter.
     ///
     /// # Type parameters:
     /// * `F` - The field name marker type (e.g., `product_fields::Price`)
@@ -303,9 +282,7 @@ impl<T> FilterBuilder<T> {
     /// struct Product { Price: f64 }
     ///
     /// // Filter for products with price <= 100.0
-    /// let mut builder = empty::<Product>();
-    ///
-    /// builder.lte::<product_fields::Price, _>(100.0);
+    /// empty::<Product>().lte::<product_fields::Price, _>(100.0);
     /// // Resulting BSON: { "Price": { "$lte": 100.0 } }
     /// ```
     pub fn lte<F, V>(&mut self, value: V) -> &mut Self
@@ -322,9 +299,7 @@ impl<T> FilterBuilder<T> {
         self
     }
 
-    /// Type-safe version of "exists" filter
-    ///
-    /// Creates a MongoDB filter that checks if a field exists in the document.
+    /// Creates a type-safe version of "exists" filter, that checks if a field exists in the document.
     ///
     /// # Type parameters:
     /// * `F` - The field name marker type (e.g., `user_fields::OptionalField`)
@@ -344,15 +319,11 @@ impl<T> FilterBuilder<T> {
     /// }
     ///
     /// // Filter for users that have a phone number
-    /// let mut builder1 = empty::<User>();
-    ///
-    /// builder1.exists::<user_fields::PhoneNumber>(true);
+    /// empty::<User>().exists::<user_fields::PhoneNumber>(true);
     /// // Resulting BSON: { "PhoneNumber": { "$exists": true } }
     ///
     /// // Filter for users without a phone number
-    /// let mut builder2 = empty::<User>();
-    ///
-    /// builder2.exists::<user_fields::PhoneNumber>(false);
+    /// empty::<User>().exists::<user_fields::PhoneNumber>(false);
     /// // Resulting BSON: { "PhoneNumber": { "$exists": false } }
     /// ```
     pub fn exists<F>(&mut self, exists: bool) -> &mut Self
@@ -368,9 +339,8 @@ impl<T> FilterBuilder<T> {
         self
     }
 
-    /// Type-safe version of "not in" operator filter
-    ///
-    /// Creates a MongoDB filter that matches values NOT in the provided array.
+    /// Create a type-safe version of MongoDB's "not in" (`$nin`) operator filter,
+    /// that matches values NOT in the provided array.
     ///
     /// # Type parameters:
     /// * `F` - The field name marker type (e.g., `product_fields::Category`)
@@ -387,9 +357,7 @@ impl<T> FilterBuilder<T> {
     /// struct Product { Category: String }
     ///
     /// // Filter for products NOT in the categories "Clothing", "Shoes", or "Accessories"
-    /// let mut builder = empty::<Product>();
-    ///
-    /// builder.nin::<product_fields::Category, _>(vec![
+    /// empty::<Product>().nin::<product_fields::Category, _>(vec![
     ///     "Clothing".to_string(),
     ///     "Shoes".to_string(),
     ///     "Accessories".to_string()
@@ -411,8 +379,6 @@ impl<T> FilterBuilder<T> {
         self
     }
 
-    /// Type-safe nested field filter builder
-    ///
     /// Creates filters for nested fields within documents by allowing you to build
     /// filters on a nested structure. This method handles the proper field path
     /// construction for nested MongoDB queries.
@@ -485,7 +451,7 @@ impl<T> FilterBuilder<T> {
         self
     }
 
-    /// Allows to create a type-safe version of MongoDB's "$or" operator,
+    /// Create a type-safe version of MongoDB's "$or" operator,
     /// where each clause is generated by applying a closure to each item in the input iterable.
     ///
     /// # Type parameters:
@@ -587,10 +553,10 @@ impl<T> FilterBuilder<T> {
         self
     }
 
-    /// Allows to create a type-safe version of MongoDB's "$not" operator.
+    /// Create a type-safe version of MongoDB's "$not" operator.
     ///
-    /// Creates a MongoDB filter that negates operations on a specific field.
-    /// This method uses an `OperationBuilder` to construct the operations that will be negated.
+    /// Such MongoDB filter negates operations on a specific field.
+    /// This method uses an `OperationBuilder` to construct the operations to be negated.
     ///
     /// # Type parameters:
     /// * `F` - The field name marker type (e.g., `product_fields::Price`)
@@ -665,6 +631,8 @@ impl<T> FilterBuilder<T> {
     /// - If only one clause exists, returns that clause directly
     /// - If multiple clauses exist, wraps them in a `$and` array
     ///
+    /// This method borrows the builder, allowing you to continue using it afterwards.
+    ///
     /// # Example
     ///
     /// ```rust
@@ -685,25 +653,24 @@ impl<T> FilterBuilder<T> {
     /// use user_fields::{Name, Age, Email};
     ///
     /// let mut builder = empty::<User>();
-    ///
     /// builder.eq::<Name, _>("John Doe".to_string())
     ///        .gt::<Age, _>(18)
     ///        .exists::<Email>(true);
-    ///
     /// let filter = builder.and();
+    /// // builder can still be used here
     /// ```
     ///
     /// Resulting BSON:
     /// ```text
     /// { "$and": [{ "name": "John Doe" }, { "age": { "$gt": 18 } }, { "email": { "$exists": true } }] }
     /// ```
-    pub fn and(self) -> bson::Document {
+    pub fn and(&self) -> bson::Document {
         if self.clauses.is_empty() {
             bson::doc! {}
         } else if self.clauses.len() == 1 {
-            self.clauses.into_iter().next().unwrap()
+            self.clauses[0].clone()
         } else {
-            bson::doc! { "$and": self.clauses }
+            bson::doc! { "$and": self.clauses.clone() }
         }
     }
 }
@@ -711,6 +678,57 @@ impl<T> FilterBuilder<T> {
 impl<T> Default for FilterBuilder<T> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// Converts a FilterBuilder into a BSON document using MongoDB's `$and` semantics.
+///
+/// This implementation allows FilterBuilder to be automatically converted to a BSON document
+/// in contexts where `Into<bson::Document>` is expected, providing a convenient way to use
+/// the builder directly with MongoDB operations.
+///
+/// The conversion follows the same logic as the `and()` method:
+/// - If no clauses exist, returns an empty document `{}`
+/// - If only one clause exists, returns that clause directly
+/// - If multiple clauses exist, wraps them in a `$and` array
+///
+/// # Example
+///
+/// ```rust
+/// use nessus::filters::empty;
+/// use nessus::{FieldWitnesses, MongoComparable};
+/// use serde::{Serialize, Deserialize};
+/// use mongodb::bson;
+///
+/// #[derive(Debug, Clone, Serialize, Deserialize, FieldWitnesses, MongoComparable)]
+/// struct User {
+///     name: String,
+///     age: i32,
+/// }
+///
+/// use user_fields::{Name, Age};
+///
+/// // The builder can be automatically converted to bson::Document
+/// let mut builder = empty::<User>();
+/// builder.eq::<Name, _>("John".to_string())
+///        .gt::<Age, _>(18);
+///
+/// // Automatic conversion when expected type is bson::Document
+/// let filter: bson::Document = builder.into();
+///
+/// // Or use directly in function calls expecting Into<bson::Document>
+/// fn process_filter(filter: impl Into<bson::Document>) {
+///     let doc = filter.into();
+///     // ... use doc for MongoDB query
+/// }
+///
+/// let mut builder2 = empty::<User>();
+/// builder2.eq::<Name, _>("Alice".to_string());
+/// process_filter(builder2); // Automatic conversion
+/// ```
+impl<T> From<FilterBuilder<T>> for bson::Document {
+    fn from(val: FilterBuilder<T>) -> Self {
+        val.and()
     }
 }
 
@@ -723,13 +741,14 @@ impl<T> Default for FilterBuilder<T> {
 ///
 /// ```rust
 /// use nessus::filters::empty;
-/// use nessus::FieldWitnesses;
+/// use nessus::{FieldWitnesses, MongoComparable};
 /// use serde::{Serialize, Deserialize};
 ///
-/// #[derive(Debug, Clone, Serialize, Deserialize, FieldWitnesses)]
+/// #[derive(Debug, Clone, Serialize, Deserialize, FieldWitnesses, MongoComparable)]
 /// struct User { Name: String }
 ///
-/// let filter_builder = empty::<User>();
+/// // Create and use a filter builder in one chain
+/// empty::<User>().eq::<user_fields::Name, _>("John".to_string());
 /// ```
 pub fn empty<T>() -> FilterBuilder<T> {
     FilterBuilder::new()

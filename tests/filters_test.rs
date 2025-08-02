@@ -1119,3 +1119,130 @@ fn test_operation_builder_complex_chain() {
 
     assert_eq!(builder.clauses(), &vec![expected_not, expected_eq]);
 }
+
+// Tests for Into<bson::Document> implementation
+
+#[test]
+fn test_into_bson_document_empty_builder() {
+    let builder = empty::<Product>();
+    let doc: bson::Document = builder.into();
+
+    assert_eq!(doc, bson::doc! {});
+}
+
+#[test]
+fn test_into_bson_document_single_clause() {
+    let mut builder = empty::<Product>();
+    builder.eq::<product_fields::Name, _>("Laptop".to_string());
+
+    let doc: bson::Document = builder.into();
+    let expected = bson::doc! { "name": "Laptop" };
+
+    assert_eq!(doc, expected);
+}
+
+#[test]
+fn test_into_bson_document_multiple_clauses() {
+    let mut builder = empty::<Product>();
+    builder
+        .eq::<product_fields::Name, _>("Laptop".to_string())
+        .gt::<product_fields::Price, _>(500.0)
+        .lt::<product_fields::Stock, _>(100);
+
+    let doc: bson::Document = builder.into();
+    let expected = bson::doc! {
+        "$and": [
+            { "name": "Laptop" },
+            { "price": { "$gt": 500.0 } },
+            { "stock": { "$lt": 100 } }
+        ]
+    };
+
+    assert_eq!(doc, expected);
+}
+
+#[test]
+fn test_into_bson_document_complex_filters() {
+    let mut builder = empty::<User>();
+    builder
+        .eq::<user_fields::Name, _>("John Doe".to_string())
+        .gte::<user_fields::Age, _>(18)
+        .exists::<user_fields::Id>(true);
+
+    let doc: bson::Document = builder.into();
+    let expected = bson::doc! {
+        "$and": [
+            { "name": "John Doe" },
+            { "age": { "$gte": 18 } },
+            { "id": { "$exists": true } }
+        ]
+    };
+
+    assert_eq!(doc, expected);
+}
+
+#[test]
+fn test_into_bson_document_with_function_parameter() {
+    // Test that FilterBuilder can be passed to functions expecting Into<bson::Document>
+    fn process_filter(filter: impl Into<bson::Document>) -> bson::Document {
+        filter.into()
+    }
+
+    let mut builder = empty::<Product>();
+    builder
+        .eq::<product_fields::Name, _>("Smartphone".to_string())
+        .lte::<product_fields::Price, _>(800.0);
+
+    let result = process_filter(builder);
+    let expected = bson::doc! {
+        "$and": [
+            { "name": "Smartphone" },
+            { "price": { "$lte": 800.0 } }
+        ]
+    };
+
+    assert_eq!(result, expected);
+}
+
+#[test]
+fn test_into_bson_document_consistency_with_and() {
+    // Test that Into<bson::Document> produces the same result as and()
+    let mut builder1 = empty::<Product>();
+    builder1
+        .eq::<product_fields::Name, _>("Tablet".to_string())
+        .gt::<product_fields::Price, _>(200.0)
+        .exists::<product_fields::Id>(true);
+
+    let and_result = builder1.and();
+
+    // Create a second identical builder for the into() test
+    let mut builder2 = empty::<Product>();
+    builder2
+        .eq::<product_fields::Name, _>("Tablet".to_string())
+        .gt::<product_fields::Price, _>(200.0)
+        .exists::<product_fields::Id>(true);
+
+    let into_result: bson::Document = builder2.into();
+
+    assert_eq!(and_result, into_result);
+}
+
+#[test]
+fn test_into_bson_document_with_nested_filters() {
+    let mut builder = empty::<User>();
+    builder
+        .eq::<user_fields::Name, _>("Alice".to_string())
+        .with_nested::<user_fields::HomeAddress, Address, _>(|nested| {
+            nested.eq::<address_fields::City, _>("New York".to_string())
+        });
+
+    let doc: bson::Document = builder.into();
+    let expected = bson::doc! {
+        "$and": [
+            { "name": "Alice" },
+            { "home_address.city": "New York" }
+        ]
+    };
+
+    assert_eq!(doc, expected);
+}
